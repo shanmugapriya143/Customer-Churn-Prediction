@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - RetainAI</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <header>
+    <a href="index.html" class="logo">
+      <i class="fas fa-chart-line"></i> RetainAI
+    </a>
+    <div style="color: var(--text-muted); font-size: 0.9rem;">
+      <i class="fas fa-user-circle"></i> Admin User
+    </div>
+  </header>
+
+  <div class="dashboard-main">
+    <!-- LEFT PANEL: INPUT FORM -->
+    <aside class="sidebar">
+      <h2><i class="fas fa-sliders-h" style="font-size: 0.9em; margin-right: 8px;"></i> Customer Profile</h2>
+
+      <!-- Mode Toggle -->
+      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <button class="btn" id="btnSingle" onclick="switchMode('single')"
+          style="flex:1; padding: 0.5rem; font-size: 0.8rem;">Single</button>
+        <button class="btn btn-outline" id="btnBulk" onclick="switchMode('bulk')"
+          style="flex:1; padding: 0.5rem; font-size: 0.8rem;">Bulk Upload</button>
+      </div>
+
+      <!-- BULK FORM (Hidden by default) -->
+      <form id="bulkForm" style="display: none;" onsubmit="event.preventDefault(); window.uploadBulk();">
+        <div class="form-group">
+          <label>Upload Customer CSV</label>
+          <input type="file" id="csvFile" class="form-control" accept=".csv" required>
+          <small style="color: var(--text-muted); display: block; margin-top: 5px;">
+            Required columns: customerID, tenure, MonthlyCharges, etc.
+          </small>
+        </div>
+        <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+          <i class="fas fa-file-upload"></i> Analyze List
+        </button>
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="http://127.0.0.1:5000/static/sample.csv" download
+            style="color: var(--primary-color); font-size: 0.9rem;">Download Sample CSV</a>
+        </div>
+      </form>
+
+      <!-- SINGLE FORM -->
+      <form id="predictionForm" onsubmit="event.preventDefault(); window.predict();">
+
+        <div class="form-group">
+          <label>Tenure (Months)</label>
+          <input type="number" id="tenure" class="form-control" placeholder="e.g. 12" required min="0" value="12">
+        </div>
+
+        <div class="form-group">
+          <label>Monthly Charges ($)</label>
+          <input type="number" id="monthlyCharges" class="form-control" placeholder="e.g. 65.50" required min="0"
+            step="0.01" value="70.00">
+        </div>
+
+        <div class="form-group">
+          <label>Total Charges ($)</label>
+          <input type="number" id="totalCharges" class="form-control" placeholder="e.g. 1200.00" required min="0"
+            step="0.01" value="840.00">
+        </div>
+
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="gender" class="form-control">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Senior Citizen</label>
+          <select id="seniorCitizen" class="form-control">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Contract Type</label>
+          <select id="contract" class="form-control">
+            <option value="Month-to-month">Month-to-month</option>
+            <option value="One year">One year</option>
+            <option value="Two year">Two year</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+          <i class="fas fa-calculator"></i> Predict Churn Risk
+        </button>
+      </form>
+    </aside>
+
+    <!-- RIGHT PANEL: RESULTS -->
+    <main class="content-area">
+      <div class="section-header">
+        <h2>Analysis Results</h2>
+        <span class="last-updated">Last calculation: <span id="lastUpdated">Never</span></span>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-row">
+        <!-- Card 1: Probability -->
+        <div class="kpi-card" id="cardProb">
+          <h4>Churn Probability</h4>
+          <div class="kpi-value" id="probValue">--</div>
+          <div class="kpi-sub">Confidence Score</div>
+        </div>
+
+        <!-- Card 2: Risk Level -->
+        <div class="kpi-card" id="cardRisk">
+          <h4>Risk Level</h4>
+          <div class="kpi-value" id="riskValue">--</div>
+          <div class="kpi-sub">Categorical Rating</div>
+        </div>
+
+        <!-- Card 3: Reason -->
+        <div class="kpi-card" style="border-left-color: var(--secondary-color);">
+          <h4>Primary Reason</h4>
+          <div class="kpi-value" style="font-size: 1.1rem;" id="reasonValue">--</div>
+          <div class="kpi-sub">Key Driver</div>
+        </div>
+
+        <!-- Card 4: Suggestion -->
+        <div class="kpi-card" style="border-left-color: var(--primary-color);">
+          <h4>Suggestion</h4>
+          <div class="kpi-value" style="font-size: 1.1rem;" id="suggestionValue">--</div>
+          <div class="kpi-sub">Recommended Action</div>
+        </div>
+
+        <!-- Card 5: Business Tip -->
+        <div class="kpi-card" style="border-left-color: #00bcd4;">
+          <h4>Business Tip</h4>
+          <div class="kpi-value" style="font-size: 1.1rem;" id="tipValue">--</div>
+          <div class="kpi-sub">Engagement Strategy</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h4><i class="fas fa-chart-bar"></i> Usage Metrics vs Average</h4>
+          <div class="chart-wrapper">
+            <canvas id="usageChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4><i class="fas fa-chart-pie"></i> Risk Composition</h4>
+          <div class="chart-wrapper">
+            <canvas id="riskChart"></canvas>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <!-- BULK RESULTS TABLE (Hidden by default) -->
+  <div id="bulkResults" style="display: none;">
+    <div class="section-header">
+      <h2>Churn Risk Leaderboard</h2>
+      <button onclick="window.print()" class="btn btn-outline" style="padding: 0.5rem 1rem;">
+        <i class="fas fa-file-pdf"></i> Export Report
+      </button>
+    </div>
+    <div style="overflow-x: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow-sm);">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border-color); color: var(--secondary-color);">
+            <th style="padding: 10px;">Rank</th>
+            <th style="padding: 10px;">Customer ID</th>
+            <th style="padding: 10px;">Risk Score</th>
+            <th style="padding: 10px;">Risk Level</th>
+            <th style="padding: 10px;">Primary Reason</th>
+          </tr>
+        </thead>
+        <tbody id="rankingTableBody">
+          <!-- Rows injected via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
