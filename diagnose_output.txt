@@ -1,6 +1,0 @@
-Loading from C:\Users\SHANUMUGA PRIYA\OneDrive\Desktop\Customer Churn Prediction\backend\model
-Scaler type: <class 'sklearn.preprocessing._data.StandardScaler'>
-Scaler expects 19 features.
-Encoders keys (16): ['gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract', 'PaperlessBilling', 'PaymentMethod', 'Churn']
-Model type: <class 'sklearn.ensemble._forest.RandomForestClassifier'>
-Model expects 19 features.
