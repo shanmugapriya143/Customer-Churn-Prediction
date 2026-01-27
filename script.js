@@ -1,18 +1,11 @@
-// Helper: Get element by ID
 const getEl = (id) => document.getElementById(id);
 
 let usageChartInstance = null;
 let riskChartInstance = null;
 
-/**
- * Main Predict Function
- * Triggered by the form submit
- */
 async function predict() {
     const btn = document.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
-
-    // 1. Collect Inputs
     const payload = {
         tenure: parseInt(getEl('tenure').value) || 0,
         MonthlyCharges: parseFloat(getEl('monthlyCharges').value) || 0,
@@ -20,8 +13,6 @@ async function predict() {
         SeniorCitizen: parseInt(getEl('seniorCitizen').value) || 0,
         Contract: getEl('contract').value,
         gender: getEl('gender').value,
-
-        // Default values usually handled by backend or other inputs
         Partner: "No",
         Dependents: "No",
         PhoneService: "Yes",
@@ -37,16 +28,14 @@ async function predict() {
         PaymentMethod: "Electronic check"
     };
 
-    // UI Loading State
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
     btn.disabled = true;
 
     try {
-        // 2. Send POST Request with timeout handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-        const response = await fetch("http://127.0.0.1:5000/predict", {
+        const response = await fetch("https://customer-churn-prediction-j59a.onrender.com/predict",{
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -58,11 +47,9 @@ async function predict() {
 
         const data = await response.json();
 
-        // 3. Update UI
         renderResults(data);
         renderCharts(payload, data.probability);
 
-        // Update timestamp
         const now = new Date();
         document.getElementById('lastUpdated').innerText = now.toLocaleTimeString();
 
@@ -75,18 +62,10 @@ async function predict() {
     }
 }
 
-/**
- * Render KPI Cards with Dynamic Styling
- */
 function renderResults(data) {
-    // Probability
     getEl('probValue').innerText = data.probability + "%";
-
-    // Risk Level & Styling
     const riskCard = getEl('cardRisk');
     const probCard = getEl('cardProb');
-
-    // Reset classes
     riskCard.className = 'kpi-card';
     probCard.className = 'kpi-card';
 
@@ -102,8 +81,6 @@ function renderResults(data) {
         riskCard.classList.add('risk-low');
         probCard.classList.add('risk-low');
     }
-
-    // Reason & Suggestion
     const reasonText = Array.isArray(data.reasons) && data.reasons.length > 0
         ? data.reasons[0]
         : "Normal usage pattern";
@@ -113,17 +90,14 @@ function renderResults(data) {
     getEl('tipValue').innerText = data.tip || "N/A";
 }
 
-/**
- * Render Charts (Bar & Doughnut)
- */
+
 function renderCharts(inputs, probability) {
 
-    // 1. Usage Chart (Bar)
     const ctxUsage = getEl('usageChart').getContext('2d');
     const metricData = [
         inputs.tenure,
         inputs.MonthlyCharges,
-        inputs.TotalCharges / 20 // Scale down for visibility
+        inputs.TotalCharges / 20 
     ];
 
     if (usageChartInstance) {
@@ -150,7 +124,6 @@ function renderCharts(inputs, probability) {
         });
     }
 
-    // 2. Risk Chart (Doughnut)
     const ctxRisk = getEl('riskChart').getContext('2d');
     const riskData = [probability, 100 - probability];
 
@@ -181,18 +154,14 @@ function renderCharts(inputs, probability) {
     }
 }
 
-// Global expose
 window.predict = predict;
 window.switchMode = switchMode;
 window.uploadBulk = uploadBulk;
 
-// Auto-predict on load
 document.addEventListener('DOMContentLoaded', () => {
-    // Small delay to ensure smooth UX/animations if any
     setTimeout(predict, 500);
 });
 
-// --- NEW FUNCTIONS ---
 
 function switchMode(mode) {
     const singleForm = getEl('predictionForm');
@@ -200,7 +169,6 @@ function switchMode(mode) {
     const btnSingle = getEl('btnSingle');
     const btnBulk = getEl('btnBulk');
 
-    // Results areas
     const singleResults = document.querySelector('.kpi-row');
     const chartResults = document.querySelector('.charts-row');
     const bulkResults = getEl('bulkResults');
@@ -213,12 +181,11 @@ function switchMode(mode) {
         btnSingle.className = 'btn btn-outline';
         btnBulk.className = 'btn';
 
-        // Hide Single View Results
+        
         singleResults.style.display = 'none';
         chartResults.style.display = 'none';
         sectionHeader.style.display = 'none';
 
-        // Show Bulk Results (if they exist, else empty container)
         bulkResults.style.display = 'block';
 
     } else {
@@ -228,12 +195,10 @@ function switchMode(mode) {
         btnSingle.className = 'btn';
         btnBulk.className = 'btn btn-outline';
 
-        // Show Single View Results
         singleResults.style.display = 'grid';
         chartResults.style.display = 'grid';
         sectionHeader.style.display = 'flex';
 
-        // Hide Bulk
         bulkResults.style.display = 'none';
     }
 }
@@ -255,7 +220,7 @@ async function uploadBulk() {
     btn.disabled = true;
 
     try {
-        const response = await fetch("http://127.0.0.1:5000/upload", {
+        const response = await fetch("https://customer-churn-prediction-j59a.onrender.com/upload", {
             method: "POST",
             body: formData
         });
